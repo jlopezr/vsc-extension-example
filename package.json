@@ -36,6 +36,10 @@
       {
         "command": "helloworld.callWebService",
         "title": "Call Web Service"
+      },
+      {
+        "command": "extension.createWindow",
+        "title": "Create new window"
       }
     ]
   },

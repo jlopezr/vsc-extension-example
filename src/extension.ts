@@ -31,27 +31,27 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let disposableListOpenEditors = vscode.commands.registerCommand('extension.listOpenEditors', () => {
 		const openedDocs = vscode.workspace.textDocuments;
-        if (openedDocs.length === 0) {
-            vscode.window.showInformationMessage('No files are currently opened');
-            return;
-        }
+		if (openedDocs.length === 0) {
+			vscode.window.showInformationMessage('No files are currently opened');
+			return;
+		}
 
-        // Map the document URIs to their file paths
-        const filePaths = openedDocs.map(doc => doc.uri.fsPath);
+		// Map the document URIs to their file paths
+		const filePaths = openedDocs.map(doc => doc.uri.fsPath);
 
-        // Show the file paths in a Quick Pick menu
-        vscode.window.showQuickPick(filePaths, {
-            placeHolder: 'Opened Files',
-            onDidSelectItem: item => {
-                const selectedPath = item as string;
-                const doc = openedDocs.find(d => d.uri.fsPath === selectedPath);
-                if (doc) {
-                    vscode.window.showTextDocument(doc);
-                }
-            }
-        });
-    });
-	
+		// Show the file paths in a Quick Pick menu
+		vscode.window.showQuickPick(filePaths, {
+			placeHolder: 'Opened Files',
+			onDidSelectItem: item => {
+				const selectedPath = item as string;
+				const doc = openedDocs.find(d => d.uri.fsPath === selectedPath);
+				if (doc) {
+					vscode.window.showTextDocument(doc);
+				}
+			}
+		});
+	});
+
 	let disposableReplaceJuan = vscode.commands.registerCommand('extension.replaceJuanWithMola', () => {
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
@@ -60,7 +60,6 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		const document = editor.document;
-		const text = document.getText();
 
 		// Create a text edit for each occurrence of "juan" and replace it with "mola"
 		const edit = new vscode.WorkspaceEdit();
@@ -120,7 +119,35 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(disposableCountWords, disposableCountLines, disposableListOpenEditors, disposableReplaceJuan, disposableListAllFiles, disposableCallWebService);
+	let disposableCreateWindow = vscode.commands.registerCommand('extension.createWindow', () => {
+		const panel = vscode.window.createWebviewPanel(
+			'newWindow',
+			'New Window',
+			vscode.ViewColumn.One,
+			{
+				// Enable scripts in the webview
+				enableScripts: true
+			}
+		);
+
+		panel.webview.html = getWebviewContent();
+
+		// Handle messages from the webview
+		panel.webview.onDidReceiveMessage(
+			message => {
+				switch (message.command) {
+					case 'buttonClicked':
+						vscode.window.showInformationMessage('Button was clicked!');
+						return;
+				}
+			},
+			undefined,
+			context.subscriptions
+		);
+	});
+
+	context.subscriptions.push(disposableCountWords, disposableCountLines, disposableListOpenEditors, disposableReplaceJuan, disposableListAllFiles, 
+		disposableCallWebService, disposableCreateWindow);
 }
 
 function countWords(text: string): number {
@@ -138,6 +165,32 @@ async function listFilesInDirectory(dir: string): Promise<string[]> {
 	const filesInSubdirectories = await Promise.all(filesInSubdirectoriesPromises);
 
 	return files.concat(filesInSubdirectories.flat());
+}
+
+function getWebviewContent() {
+    return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>New Window</title>
+            <script>
+                const vscode = acquireVsCodeApi();
+
+                function buttonClicked() {
+                    // Send a message to the extension
+                    vscode.postMessage({
+                        command: 'buttonClicked'
+                    });
+                }
+            </script>
+        </head>
+        <body>
+            <h1>Hello World</h1>
+            <button onclick="buttonClicked()">Click me</button>
+        </body>
+        </html>`;
 }
 
 // This method is called when your extension is deactivated
