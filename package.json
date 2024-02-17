@@ -41,7 +41,15 @@
         "command": "extension.createWindow",
         "title": "Create new window"
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "myView",
+          "name": "My View"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

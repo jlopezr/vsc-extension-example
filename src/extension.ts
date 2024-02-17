@@ -145,9 +145,15 @@ export function activate(context: vscode.ExtensionContext) {
 			context.subscriptions
 		);
 	});
+	
+	const myView = vscode.window.createTreeView('myView', {
+		treeDataProvider: aNodeWithId('Hello World')
+	});
 
-	context.subscriptions.push(disposableCountWords, disposableCountLines, disposableListOpenEditors, disposableReplaceJuan, disposableListAllFiles, 
-		disposableCallWebService, disposableCreateWindow);
+	context.subscriptions.push(disposableCountWords, disposableCountLines, disposableListOpenEditors, disposableReplaceJuan, disposableListAllFiles,
+		disposableCallWebService, disposableCreateWindow, myView);
+
+
 }
 
 function countWords(text: string): number {
@@ -168,7 +174,7 @@ async function listFilesInDirectory(dir: string): Promise<string[]> {
 }
 
 function getWebviewContent() {
-    return `
+	return `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -191,6 +197,23 @@ function getWebviewContent() {
             <button onclick="buttonClicked()">Click me</button>
         </body>
         </html>`;
+}
+
+function aNodeWithId(label: string): vscode.TreeDataProvider<string> {
+	return {
+		getTreeItem: (id: string): vscode.TreeItem => {
+			let treeItem = new vscode.TreeItem(id);
+			treeItem.id = id;
+			return treeItem;
+		},
+		getChildren: (id: string): Thenable<string[]> => {
+			if (id) {
+				return Promise.resolve([id]);
+			} else {
+				return Promise.resolve(['Hello World']);
+			}
+		}
+	};
 }
 
 // This method is called when your extension is deactivated
